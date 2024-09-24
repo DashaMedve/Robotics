@@ -1,0 +1,7 @@
+ROS_DISTRO=humble
+ROS_LOCALHOST_ONLY=1
+ROS_PYTHON_VERSION=3
+ROS_VERSION=2
+ROS_OS_OVERRIDE=conda:osx
+ROS_ETC_DIR=/usr/local/Caskroom/miniforge/base/envs/ros_env/etc/ros
+ROS_DOMAIN_ID=8

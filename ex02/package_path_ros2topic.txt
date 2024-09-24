@@ -1,0 +1,1 @@
+/usr/local/Caskroom/miniforge/base/envs/ros_env/share/ros2topic
