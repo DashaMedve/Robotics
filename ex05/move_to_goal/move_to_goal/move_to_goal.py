@@ -1,5 +1,6 @@
 import sys
 import time
+import math
 
 import rclpy
 from rclpy.node import Node
@@ -10,7 +11,7 @@ from geometry_msgs.msg import Twist
 
 class TurtleMover(Node):
 
-    def __init__(self, x, y, theta, e=1e-6):
+    def __init__(self, x, y, theta, e=0.1):
         super().__init__("turtle_mover")
         
         self.desired_x = x
@@ -54,34 +55,44 @@ class TurtleMover(Node):
         
             message = Twist()
             
+            x_difference = self.desired_x - self.current_x
+            y_difference = self.desired_y - self.current_y
+            
+            if abs(x_difference) < self.e:
+                self.x_ready = True
+            if abs(y_difference) < self.e:
+                self.y_ready = True
+            
             if not self.x_ready or not self.y_ready:
-                theta_difference = -self.current_theta
+                temporary_desired_theta = math.atan(y_difference / (x_difference + 1e-10))
+                if x_difference < 0:
+                    if y_difference < 0:
+                        temporary_desired_theta -= math.pi
+                    else:
+                        temporary_desired_theta += math.pi
+                theta_difference = temporary_desired_theta - self.current_theta
+                
+                self.get_logger().info(f"temporary_desired_theta = {temporary_desired_theta}")
                 self.get_logger().info(f"self.current_theta = {self.current_theta}")
                 self.get_logger().info(f"theta_difference = {theta_difference}")
                 self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                message.angular.z = theta_difference
-                self.publisher.publish(message)
-                time.sleep(1.5)
-            
-                if abs(theta_difference) < self.e:
-                    message.angular.z = 0.0
-                    x_difference = self.desired_x - self.current_x
-                    y_difference = self.desired_y - self.current_y
-                    self.get_logger().info(f"self.desired_x = {self.desired_x}")
-                    self.get_logger().info(f"self.current_x = {self.current_x}")
-                    self.get_logger().info(f"x_difference = {x_difference}")
-                    self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                    self.get_logger().info(f"self.desired_y = {self.desired_y}")
-                    self.get_logger().info(f"self.current_y = {self.current_y}")
-                    self.get_logger().info(f"y_difference = {y_difference}")
-                    self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                    if abs(x_difference) < self.e and abs(y_difference) < self.e:
-                        message.linear.x = 0.0
-                        message.linear.y = 0.0
-                        self.x_ready = True
-                        self.y_ready = True
-                    message.linear.x = x_difference
-                    message.linear.y = y_difference
+                self.get_logger().info(f"self.desired_x = {self.desired_x}")
+                self.get_logger().info(f"self.current_x = {self.current_x}")
+                self.get_logger().info(f"x_difference = {x_difference}")
+                self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                self.get_logger().info(f"self.desired_y = {self.desired_y}")
+                self.get_logger().info(f"self.current_y = {self.current_y}")
+                self.get_logger().info(f"y_difference = {y_difference}")
+                self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                
+                if abs(theta_difference) < self.e / 10:
+                    s = math.sqrt(x_difference**2 + y_difference**2)
+                    message.linear.x = s
+                    self.publisher.publish(message)
+                    time.sleep(1.5)
+                else:
+                    message.linear.x = abs(theta_difference) * 0.5
+                    message.angular.z = theta_difference
                     self.publisher.publish(message)
                     time.sleep(1.5)
             
@@ -92,7 +103,6 @@ class TurtleMover(Node):
                 self.get_logger().info(f"theta_difference = {theta_difference}")
                 self.get_logger().info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 if abs(theta_difference) < self.e:
-                    message.angular.z = 0.0
                     self.theta_ready = True
                 message.angular.z = theta_difference
                 self.publisher.publish(message)
