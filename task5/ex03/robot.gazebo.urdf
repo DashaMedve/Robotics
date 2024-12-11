@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="Moonzy">
+
+    <!-- Define properties -->
+    <xacro:property name="stomach_radius" value="0.2"/>
+    <xacro:property name="wheel_radius" value="0.07"/>
+
+    <!-- Some plugins for gazebo -->
+    <gazebo>
+        <plugin
+            filename="gz-sim-joint-state-publisher-system"
+            name="gz::sim::systems::JointStatePublisher">
+        </plugin>
+
+        <plugin
+            filename="gz-sim-diff-drive-system"
+            name="gz::sim::systems::DiffDrive">
+            <left_joint>left_wheel_joint</left_joint>
+            <right_joint>right_wheel_joint</right_joint>
+            <child_frame_id>Moonzy/base_link</child_frame_id>
+            <wheel_separation>${stomach_radius}</wheel_separation>
+            <wheel_radius>${wheel_radius}</wheel_radius>
+            <odom_publish_frequency>10</odom_publish_frequency>
+        </plugin>
+    </gazebo>
+</robot>
